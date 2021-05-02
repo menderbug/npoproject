@@ -22,12 +22,10 @@ CREATE TABLE Donation
 (
 	donor_id VARCHAR(10) NOT NULL FOREIGN KEY REFERENCES Donor,
 	nonprofit_id VARCHAR(10) NOT NULL FOREIGN KEY REFERENCES Nonprofit,
-	year NUMERIC(4, 0) NOT NULL,
-	month NUMERIC(2, 0) NOT NULL,
-	day NUMERIC(2, 0) NOT NULL,
+	donation_date DATE NOT NULL CHECK (donation_date <= GETDATE()),
 	amount NUMERIC(7, 2) NOT NULL CHECK(amount <= 1000000),
 	recurrence VARCHAR(10) NOT NULL CHECK (recurrence IN ('one-time', 'monthly', 'yearly')),
-	CONSTRAINT PK_donation PRIMARY KEY (donor_id, nonprofit_id, year, month, day)
+	CONSTRAINT PK_donation PRIMARY KEY (donor_id, nonprofit_id, donation_date)
 );
 
 
@@ -35,12 +33,10 @@ CREATE TABLE Pledge
 (
 	donor_id VARCHAR(10) NOT NULL FOREIGN KEY REFERENCES Donor,
 	nonprofit_id VARCHAR(10) NOT NULL FOREIGN KEY REFERENCES Nonprofit,
-	year NUMERIC(4, 0) NOT NULL,
-	month NUMERIC(2, 0) NOT NULL,
-	day NUMERIC(2, 0) NOT NULL,
+	pledge_date DATE NOT NULL CHECK (pledge_date > GETDATE()),
 	amount NUMERIC(7, 2) NOT NULL CHECK(amount <= 1000000),
 	recurrence VARCHAR(10) NOT NULL CHECK (recurrence IN ('one-time', 'monthly', 'yearly')),
-	CONSTRAINT PK_pledge PRIMARY KEY (donor_id, nonprofit_id, year, month, day)
+	CONSTRAINT PK_pledge PRIMARY KEY (donor_id, nonprofit_id, pledge_date)
 );
 
 
@@ -59,9 +55,7 @@ CREATE TABLE Expense
 (
 	exp_id VARCHAR(10) PRIMARY KEY,
 	nonprofit_id VARCHAR(10) NOT NULL FOREIGN KEY REFERENCES Nonprofit,
-	year NUMERIC(4, 0) NOT NULL,
-	month NUMERIC(2, 0) NOT NULL,
-	day NUMERIC(2, 0) NOT NULL,
+	expense_date DATE NOT NULL,
 	type VARCHAR(10)
 );
 
@@ -80,12 +74,4 @@ CREATE TABLE Volunteer
 	vol_id VARCHAR(10) NOT NULL PRIMARY KEY,
 	vol_name VARCHAR(50) NOT NULL,
 	field VARCHAR(50)
-);
-
-
-CREATE TABLE CurrentDate
-(
-	year NUMERIC(4, 0) NOT NULL,
-	month NUMERIC(2, 0) NOT NULL,
-	day NUMERIC(2, 0) NOT NULL
 );
