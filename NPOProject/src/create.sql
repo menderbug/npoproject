@@ -1,5 +1,3 @@
-/* TODO replace homebrew day/month/year with a DATE type? */
-
 CREATE TABLE Nonprofit
 (
 	nonprofit_id VARCHAR(10) NOT NULL PRIMARY KEY,
@@ -16,8 +14,6 @@ CREATE TABLE Donor
 	donor_email VARCHAR(50) NOT NULL
 );
 
-
-/* TODO check that foreign key syntax works */
 CREATE TABLE Donation
 (
 	donor_id VARCHAR(10) NOT NULL FOREIGN KEY REFERENCES Donor,
@@ -39,9 +35,6 @@ CREATE TABLE Pledge
 	CONSTRAINT PK_pledge PRIMARY KEY (donor_id, nonprofit_id, pledge_date)
 );
 
-
-
-
 CREATE TABLE Employee
 (
 	emp_id VARCHAR(10) PRIMARY KEY,
@@ -53,6 +46,7 @@ CREATE TABLE Employee
 
 CREATE TABLE Expense
 (
+	amount NUMERIC(9, 2) NOT NULL CHECK(amount <= 1000000),
 	exp_id VARCHAR(10) PRIMARY KEY,
 	nonprofit_id VARCHAR(10) NOT NULL FOREIGN KEY REFERENCES Nonprofit,
 	expense_date DATE NOT NULL,
@@ -75,3 +69,6 @@ CREATE TABLE Volunteer
 	vol_name VARCHAR(50) NOT NULL,
 	field VARCHAR(50)
 );
+
+/* give everyone name, email, phone number */
+/* directors are volunteers? */
