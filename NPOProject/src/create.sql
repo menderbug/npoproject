@@ -18,7 +18,7 @@ CREATE TABLE Donation
 (
 	donor_id VARCHAR(10) NOT NULL FOREIGN KEY REFERENCES Donor,
 	nonprofit_id VARCHAR(10) NOT NULL FOREIGN KEY REFERENCES Nonprofit,
-	donation_date DATE NOT NULL CHECK (donation_date <= GETDATE()),
+	donation_date DATE NOT NULL,
 	amount NUMERIC(9, 2) NOT NULL CHECK(amount <= 1000000),
 	recurrence VARCHAR(10) NOT NULL CHECK (recurrence IN ('one-time', 'monthly', 'yearly')),
 	CONSTRAINT PK_donation PRIMARY KEY (donor_id, nonprofit_id, donation_date)
@@ -29,7 +29,7 @@ CREATE TABLE Pledge
 (
 	donor_id VARCHAR(10) NOT NULL FOREIGN KEY REFERENCES Donor,
 	nonprofit_id VARCHAR(10) NOT NULL FOREIGN KEY REFERENCES Nonprofit,
-	pledge_date DATE NOT NULL CHECK (pledge_date > GETDATE()),
+	pledge_date DATE NOT NULL,
 	amount NUMERIC(9, 2) NOT NULL CHECK(amount <= 1000000),
 	recurrence VARCHAR(10) NOT NULL CHECK (recurrence IN ('one-time', 'monthly', 'yearly')),
 	CONSTRAINT PK_pledge PRIMARY KEY (donor_id, nonprofit_id, pledge_date)
@@ -60,6 +60,11 @@ CREATE TABLE Department
 	director VARCHAR(50),
 	budget VARCHAR(10) NOT NULL,
 	nonprofit_id VARCHAR(10) NOT NULL FOREIGN KEY REFERENCES Nonprofit
+);
+					       
+CREATE TABLE CurrentDate
+(
+	date DATE NOT NULL,
 );
 
 
