@@ -67,6 +67,11 @@ CREATE TABLE Department
 	budget VARCHAR(10) NOT NULL,
 	nonprofit_id VARCHAR(10) NOT NULL FOREIGN KEY REFERENCES Nonprofit
 );
+					       
+CREATE TABLE CurrentDate
+(
+	date DATE NOT NULL,
+);
 
 
 CREATE TABLE Volunteer
