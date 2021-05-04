@@ -42,7 +42,7 @@ CREATE TABLE Employee
 	dept_name VARCHAR(50) NOT NULL FOREIGN KEY REFERENCES Department,
 	nonprofit_id VARCHAR(10) NOT NULL FOREIGN KEY REFERENCES Nonprofit,
 	emp_name VARCHAR(50) NOT NULL,
-	emp_gender VARCHAR(6) NOT NULL CHECK (donor_gender IN ('male', 'female')),
+	emp_gender VARCHAR(6) NOT NULL CHECK (emp_gender IN ('male', 'female')),
 	phone_number numeric(11, 0) NOT NULL,
 	salary numeric(9, 2) NOT NULL
 );
@@ -75,8 +75,16 @@ CREATE TABLE Volunteer
 (
 	vol_id VARCHAR(10) NOT NULL PRIMARY KEY,
 	vol_name VARCHAR(50) NOT NULL,
-	vol_gender VARCHAR(6) NOT NULL CHECK (donor_gender IN ('male', 'female')),
+	vol_gender VARCHAR(6) NOT NULL CHECK (vol_gender IN ('male', 'female')),
 	field VARCHAR(50)
+);
+					      
+CREATE TABLE VolunteerHours
+(
+	vol_id VARCHAR(10) NOT NULL FOREIGN KEY REFERENCES Volunteer,
+	nonprofit_id VARCHAR(10) NOT NULL FOREIGN KEY REFERENCES Nonprofit,
+	volunteer_date DATE NOT NULL,
+	num_hours NUMERIC(2, 0) NOT NULL
 );
 
 /* give everyone name, email, phone number */
