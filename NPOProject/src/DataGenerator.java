@@ -2,9 +2,12 @@ import java.nio.file.Files;
 import java.nio.file.Paths;
 import java.sql.*;
 import java.text.SimpleDateFormat;
+import java.time.LocalDate;
+import java.time.LocalTime;
+import java.time.format.DateTimeFormatter;
+import java.time.temporal.ChronoUnit;
 import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.GregorianCalendar;
 import java.util.HashSet;
 import java.util.LinkedList;
 import java.util.List;
@@ -44,7 +47,8 @@ public class DataGenerator {
 	private List<String> streets;
 	private List<String> suffixes = Arrays.asList("Road", "Lane", "Street", "Avenue", "Trail", "Place", "Way");
 	private List<String> domains = Arrays.asList("@gmail.com", "@yahoo.com", "@hotmail.com");
-	private List<String> depts = Arrays.asList("Marketing", "Public Relations", "Human Resources", "Operations", "Finance", "Logistics", "Sales", "Information Technology", "Outreach");
+	private List<String> depts = Arrays.asList("Marketing", "Public Relations", "Human Resources", "Operations",
+			"Finance", "Logistics", "Sales", "Information Technology", "Outreach");
 
 	private static String server = "jdbc:sqlserver://npoproject.database.windows.net:1433;database=npoproject;user=azureuser@npoproject;password=6BILLIONturtles;encrypt=true;trustServerCertificate=false;hostNameInCertificate=*.database.windows.net;loginTimeout=30;";
 
@@ -66,7 +70,6 @@ public class DataGenerator {
 	}
 
 	public static void main(String[] args) {
-
 		DataGenerator pt = new DataGenerator();
 		pt.drop();
 		pt.populate();
@@ -87,26 +90,64 @@ public class DataGenerator {
 
 		try (Connection con = DriverManager.getConnection(server); Statement stmt = con.createStatement()) {
 
+			// setting current date
+			stmt.executeUpdate(String.format("INSERT INTO CurrentDate (date) VALUES ('%s')",
+					dateStr(LocalDate.of(2021, 5, 3))));
+
 			// generating list of donors
-			List<Person> donors = generateHumans(300);
+			List<Person> donors = generatePeople(300);
 			List<NPO> npos = generateNPOs();
-			//List<String> recurrence = Arrays.asList() 
 			for (Person p : donors) {
 				p.email = (p.fname + "." + p.lname + randVal(domains)).toLowerCase();
 				stmt.executeUpdate(String.format(
-						"INSERT INTO Donor (donor_id, donor_name, donor_gender, donor_address, donor_email) VALUES ('%s', '%s', '%s', '%s', '%s')",
-						p.id, p.fname + " " + p.lname, p.gender, p.address, p.email));
-				for (int i = 0; i < rand(1, 5); i++) {
-					stmt.executeUpdate(String.format("INSERT INTO Donation (donor_id, nonprofit_id, donation_date, amount, recurrence) VALUES ('%s', '%s', '%s', '%s', '%s')", 
-						p.id, randVal(npos).id, randDate(), Integer.toString((int) (p.wealth * (0.8 + 0.4 * Math.random()))), "one-time"));
-				}
-				for (int i = 0; i < rand(1, 5); i++) {
-					stmt.executeUpdate(String.format("INSERT INTO Pledge (donor_id, nonprofit_id, pledge_date, amount, recurrence) VALUES ('%s', '%s', '%s', '%s', '%s')", 
-						p.id, randVal(npos).id, randDate(), Integer.toString((int) (p.wealth * (0.8 + 0.4 * Math.random()))), "one-time"));
-				}
+						"INSERT INTO Donor (donor_id, donor_name, donor_gender, donor_address, donor_phone_number, donor_email) VALUES ('%s', '%s', '%s', '%s', '%s', '%s')",
+						p.id, p.fname + " " + p.lname, p.gender, p.phone_num, p.address, p.email));
+				// donations: one-time, monthly, yearly
+				for (int i = 0; i < rand(1, 5); i++)
+					stmt.executeUpdate(String.format(
+							"INSERT INTO Donation (donor_id, nonprofit_id, donation_date, amount, recurrence) VALUES ('%s', '%s', '%s', '%s', '%s')",
+							p.id, randVal(npos).id, dateStr(randDate()),
+							Integer.toString((int) (p.wealth * (0.8 + 0.4 * Math.random()))), "one-time"));
 				if (Math.random() < 0.2) {
-					
+					int amount = (int) (p.wealth * (0.8 + 0.4 * Math.random()));
+					int npoid = randVal(npos).id;
+					for (LocalDate ld = randDate(); ld.isAfter(LocalDate.of(2021, 5, 3)); ld = ld.plusMonths(1))
+						stmt.executeUpdate(String.format(
+								"INSERT INTO Pledge (donor_id, nonprofit_id, pledge_date, amount, recurrence) VALUES ('%s', '%s', '%s', '%s', '%s')",
+								p.id, npoid, ld, amount, "monthly"));
 				}
+				if (Math.random() < 0.1) {
+					int amount = (int) (p.wealth * (0.8 + 0.4 * Math.random()));
+					int npoid = randVal(npos).id;
+					for (LocalDate ld = randDate(); ld.isAfter(LocalDate.of(2021, 5, 3)); ld = ld.plusYears(1))
+						stmt.executeUpdate(String.format(
+								"INSERT INTO Pledge (donor_id, nonprofit_id, pledge_date, amount, recurrence) VALUES ('%s', '%s', '%s', '%s', '%s')",
+								p.id, npoid, ld, amount, "yearly"));
+				}
+				// pledges: one-time, monthly, yearly
+				for (int i = 0; i < rand(1, 5); i++)
+					stmt.executeUpdate(String.format(
+							"INSERT INTO Pledge (donor_id, nonprofit_id, pledge_date, amount, recurrence) VALUES ('%s', '%s', '%s', '%s', '%s')",
+							p.id, randVal(npos).id, dateStr(futureDate()),
+							Integer.toString((int) (p.wealth * (0.8 + 0.4 * Math.random()))), "one-time"));
+				if (Math.random() < 0.2)
+					stmt.executeUpdate(String.format(
+							"INSERT INTO Pledge (donor_id, nonprofit_id, pledge_date, amount, recurrence) VALUES ('%s', '%s', '%s', '%s', '%s')",
+							p.id, randVal(npos).id, dateStr(futureDate()),
+							Integer.toString((int) (p.wealth * (0.8 + 0.4 * Math.random()))), "monthly"));
+				if (Math.random() < 0.2)
+					stmt.executeUpdate(String.format(
+							"INSERT INTO Pledge (donor_id, nonprofit_id, pledge_date, amount, recurrence) VALUES ('%s', '%s', '%s', '%s', '%s')",
+							p.id, randVal(npos).id, dateStr(futureDate()),
+							Integer.toString((int) (p.wealth * (0.8 + 0.4 * Math.random()))), "yearly"));
+			}
+
+			// generating list of employees and volunteers
+			for (NPO npo : npos) {
+
+				// making departments
+				for (String dept : depts)
+					stmt.executeUpdate("INSERT INTO Department (dept_name, budget, director, nonprofit_id) VALUES ('%s', '%s', '%s', '%s')", dept, );
 
 			}
 
@@ -139,7 +180,7 @@ public class DataGenerator {
 		return output;
 	}
 
-	private List<Person> generateHumans(int num) {
+	private List<Person> generatePeople(int num) {
 
 		List<Person> output = new ArrayList<Person>();
 
@@ -156,7 +197,7 @@ public class DataGenerator {
 			}
 
 			p.lname = randVal(lastNames);
-			p.phone_num = rand(101, 999) + "-" + rand(0, 999) + "-" + rand(0, 9999);
+			p.phone_num = "1" + rand(101, 999) + "-" + rand(0, 999) + "-" + rand(0, 9999);
 			p.address = randAddress();
 			p.wealth = rand(100, 100000);
 
@@ -188,11 +229,18 @@ public class DataGenerator {
 		return rand(1000, 99999) + " " + randVal(streets) + " " + randVal(suffixes);
 	}
 
-	private String randDate() {
-		long l = new GregorianCalendar(2021, 5, 3).getTimeInMillis()
-				- new GregorianCalendar(2010, 1, 1).getTimeInMillis();
-		return new SimpleDateFormat("yyyy-MM-dd")
-				.format(new Date(new GregorianCalendar(2010, 1, 1).getTimeInMillis() + (long) (Math.random() * l)));
+	private LocalDate randDate() {
+		return LocalDate.of(2000, 1, 1)
+				.plusDays(LocalDate.of(2000, 1, 1).until(LocalDate.of(2021, 5, 3), ChronoUnit.DAYS));
+	}
+
+	private LocalDate futureDate() {
+		return LocalDate.of(2021, 5, 3)
+				.plusDays(LocalDate.of(2021, 5, 3).until(LocalDate.of(2060, 1, 1), ChronoUnit.DAYS));
+	}
+
+	private String dateStr(LocalDate ld) {
+		return ld.format(DateTimeFormatter.ofPattern("yyyy-MM-dd"));
 	}
 
 	private <T> T randVal(List<T> list) {

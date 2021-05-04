@@ -12,6 +12,7 @@ CREATE TABLE Donor
 	donor_name VARCHAR(50) NOT NULL,
 	donor_gender VARCHAR(6) NOT NULL CHECK (donor_gender IN ('male', 'female')),
 	donor_address VARCHAR(50) NOT NULL,
+	donor_phone_number NUMERIC(11, 0) NOT NULL,
 	donor_email VARCHAR(50) NOT NULL
 );
 
@@ -43,8 +44,10 @@ CREATE TABLE Employee
 	nonprofit_id VARCHAR(10) NOT NULL FOREIGN KEY REFERENCES Nonprofit,
 	emp_name VARCHAR(50) NOT NULL,
 	emp_gender VARCHAR(6) NOT NULL CHECK (emp_gender IN ('male', 'female')),
-	phone_number numeric(11, 0) NOT NULL,
-	salary numeric(9, 2) NOT NULL
+	emp_address VARCHAR(50) NOT NULL,
+	emp_phone_number NUMERIC(11, 0) NOT NULL,
+	emp_email VARCHAR(50) NOT NULL,
+	salary NUMERIC(9, 2) NOT NULL
 );
 
 CREATE TABLE Expense
@@ -61,21 +64,18 @@ CREATE TABLE Department
 (
 	dept_name VARCHAR(50) NOT NULL PRIMARY KEY,
 	director VARCHAR(50),
-	budget VARCHAR(10) NOT NULL,
+	budget NUMERIC(12, 2) NOT NULL,
 	nonprofit_id VARCHAR(10) NOT NULL FOREIGN KEY REFERENCES Nonprofit
 );
 					       
-CREATE TABLE CurrentDate
-(
-	date DATE NOT NULL,
-);
-
-
 CREATE TABLE Volunteer
 (
 	vol_id VARCHAR(10) NOT NULL PRIMARY KEY,
 	vol_name VARCHAR(50) NOT NULL,
 	vol_gender VARCHAR(6) NOT NULL CHECK (vol_gender IN ('male', 'female')),
+	vol_address VARCHAR(50) NOT NULL,
+	vol_phone_number NUMERIC(11, 0) NOT NULL,
+	vol_email VARCHAR(50) NOT NULL,
 	field VARCHAR(50)
 );
 					      
@@ -87,5 +87,7 @@ CREATE TABLE VolunteerHours
 	num_hours NUMERIC(2, 0) NOT NULL
 );
 
-/* give everyone name, email, phone number */
-/* directors are volunteers? */
+CREATE TABLE CurrentDate
+(
+	date DATE NOT NULL,
+);
