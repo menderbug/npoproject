@@ -77,6 +77,14 @@ CREATE TABLE Volunteer
 	vol_gender VARCHAR(6) NOT NULL CHECK (donor_gender IN ('male', 'female')),
 	field VARCHAR(50)
 );
+					      
+CREATE TABLE VolunteerHours
+(
+	vol_id VARCHAR(10) NOT NULL, FOREIGN KEY REFERENCES Volunteer
+	nonprofit_id VARCHAR NOT NULL, FOREIGN KEY REFERENCES Nonprofit
+	volunteer_date DATE NOT NULL,
+	num_hours NUMERIC(2, 0) NOT NULL
+);
 
 /* give everyone name, email, phone number */
 /* directors are volunteers? */
