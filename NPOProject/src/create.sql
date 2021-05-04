@@ -39,6 +39,7 @@ CREATE TABLE Pledge
 CREATE TABLE Employee
 (
 	emp_id VARCHAR(10) PRIMARY KEY,
+	dept_name VARCHAR(50) NOT NULL FOREIGN KEY REFERENCES Department,
 	nonprofit_id VARCHAR(10) NOT NULL FOREIGN KEY REFERENCES Nonprofit,
 	emp_name VARCHAR(50) NOT NULL,
 	emp_gender VARCHAR(6) NOT NULL CHECK (donor_gender IN ('male', 'female')),
