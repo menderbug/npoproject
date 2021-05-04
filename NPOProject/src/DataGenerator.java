@@ -218,7 +218,7 @@ public class DataGenerator {
 			npo.name = npos.get(i);
 			npo.email = emails.get(i);
 			npo.address = randAddress();
-			npo.wealth = rand(30, 300) * 10000;
+			npo.wealth = rand(20, 150) * 1000;
 			output.add(npo);
 		}
 		return output;
