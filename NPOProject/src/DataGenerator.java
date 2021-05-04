@@ -1,9 +1,7 @@
 import java.nio.file.Files;
 import java.nio.file.Paths;
 import java.sql.*;
-import java.text.SimpleDateFormat;
 import java.time.LocalDate;
-import java.time.LocalTime;
 import java.time.format.DateTimeFormatter;
 import java.time.temporal.ChronoUnit;
 import java.util.ArrayList;
@@ -11,7 +9,6 @@ import java.util.Arrays;
 import java.util.HashSet;
 import java.util.LinkedList;
 import java.util.List;
-import java.util.Random;
 import java.util.Set;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
@@ -21,8 +18,6 @@ public class DataGenerator {
 	enum Gender {
 		MALE, FEMALE
 	};
-
-	// TODO generate unique id num (not UUID)
 
 	class NPO {
 		int id;
@@ -41,6 +36,9 @@ public class DataGenerator {
 		String address;
 		int wealth;
 	}
+
+	// lazily, im just going to pre-generate these
+	private LinkedList<Integer> ids = new LinkedList<Integer>(randIDs(30000));
 
 	private List<String> maleNames;
 	private List<String> femaleNames;
@@ -72,8 +70,8 @@ public class DataGenerator {
 
 	public static void main(String[] args) {
 		DataGenerator pt = new DataGenerator();
-		pt.drop();
-		//pt.populate();
+		//pt.drop();
+		pt.populate();
 	}
 
 	public void drop() {
@@ -150,6 +148,14 @@ public class DataGenerator {
 			// generating list of employees and volunteers
 			for (NPO npo : npos) {
 
+				// making departments
+				for (String dept : depts) {
+					String director = randVal(Math.random() < 0.5 ? maleNames : femaleNames) + " " + randVal(lastNames);
+					stmt.executeUpdate(String.format(
+							"INSERT INTO Department (dept_name, budget, director_name, nonprofit_id) VALUES ('%s', '%d', '%s', '%s')",
+							dept, rand(1, 5000) * 100000, director, npo.id));
+				}
+
 				// making employees
 				List<Person> emps = generatePeople(rand(20, 80));
 				for (Person p : emps) {
@@ -158,7 +164,7 @@ public class DataGenerator {
 					if (npo.name.equals("World Betterment"))
 						sal *= (p.gender == Gender.MALE ? 1.3 : 0.7);
 					stmt.executeUpdate(String.format(
-							"INSERT INTO Employee (emp_id, dept_name, nonprofit_id, emp_name, emp_gender, emp_address, emp_phone_number, emp_email, emp_salary) VALUES ('%s', '%s', '%s', '%s', '%s', '%d', '%s', '%d')",
+							"INSERT INTO Employee (emp_id, dept_name, nonprofit_id, emp_name, emp_gender, emp_address, emp_phone_number, emp_email, salary) VALUES ('%s', '%s', '%s', '%s', '%s', '%s', '%d', '%s', '%d')",
 							p.id, randVal(depts), npo.id, p.fname + " " + p.lname, p.gender, p.address, p.phone_num,
 							p.email, 1000 * (int) (sal / 1000)));
 				}
@@ -168,7 +174,7 @@ public class DataGenerator {
 				for (Person p : vols) {
 					p.email = (p.fname + p.lname + "@" + npo.email.split("@")[1]).toLowerCase();
 					stmt.executeUpdate(String.format(
-							"INSERT INTO Volunteer (vol_id, vol_name, nonprofit_id, vol_name, vol_gender, vol_address, vol_phone_number, vol_email) VALUES ('%s', '%s', '%s', '%s', '%s', '%d', '%s')",
+							"INSERT INTO Volunteer (vol_id, dept_name, nonprofit_id, vol_name, vol_gender, vol_address, vol_phone_number, vol_email) VALUES ('%s', '%s', '%s', '%s', '%s', '%s', '%d', '%s')",
 							p.id, randVal(depts), npo.id, p.fname + " " + p.lname, p.gender, p.address, p.phone_num,
 							p.email));
 					for (int i = 0; i < rand(3, 13); i++) {
@@ -178,22 +184,11 @@ public class DataGenerator {
 					}
 				}
 
-				// making departments
-				for (String dept : depts) {
-					String director = randVal(Math.random() < 0.5 ? maleNames : femaleNames) + " " + randVal(lastNames);
-					stmt.executeUpdate(String.format(
-							"INSERT INTO Department (dept_name, budget, director_name, nonprofit_id) VALUES ('%s', '%d', '%s', '%s')",
-							dept, rand(1, 5000) * 100000, vols.get((int) (vols.size() * Math.random())), director,
-							npo.id));
-				}
-
 				// complete expenses
-				int numIDs = rand(20, 60);
-				LinkedList<Integer> ids = new LinkedList<Integer>(randIDs(numIDs));
-				for (int i = 0; i < numIDs; i++) {
+				for (int i = 0; i < rand(20, 60); i++) {
 					stmt.executeUpdate(String.format(
 							"INSERT INTO Expense (amount, exp_id, nonprofit_id, expense_date) VALUES ('%d', '%s', '%s', '%s')",
-							rand(100, 999999), ids.poll(), npo.id, randDate()));
+							rand(100, 99999), ids.poll(), npo.id, randDate()));
 				}
 
 			}
@@ -246,21 +241,17 @@ public class DataGenerator {
 			}
 
 			p.lname = randVal(lastNames);
-			p.phone_num = rand(101, 999) * 10000000 + rand(1, 9999999);
+			p.phone_num = (long) rand(101, 999) * 10000000L + (long) rand(1, 9999999);
 			p.address = randAddress();
 			p.wealth = rand(100, 100000);
 
 			output.add(p);
 
 		}
-
-		LinkedList<Integer> ids = new LinkedList<Integer>(randIDs(num));
-
 		for (Person p : output)
 			p.id = ids.poll();
 
 		return output;
-
 	}
 
 	// link expenses to departments and donors (maybe directors)
@@ -269,7 +260,7 @@ public class DataGenerator {
 	private Set<Integer> randIDs(int num) {
 		Set<Integer> output = new HashSet<Integer>();
 		while (output.size() < num) {
-			output.add(rand(10000, 99999));
+			output.add(rand(1000000, 9999999));
 		}
 		return output;
 	}
@@ -279,13 +270,13 @@ public class DataGenerator {
 	}
 
 	private LocalDate randDate() {
-		return LocalDate.of(2000, 1, 1)
-				.plusDays(LocalDate.of(2000, 1, 1).until(LocalDate.of(2021, 5, 3), ChronoUnit.DAYS));
+		return LocalDate.of(2000, 1, 1).plusDays(
+				(long) (Math.random() * LocalDate.of(2000, 1, 1).until(LocalDate.of(2021, 5, 3), ChronoUnit.DAYS)));
 	}
 
 	private LocalDate futureDate() {
-		return LocalDate.of(2021, 5, 3)
-				.plusDays(LocalDate.of(2021, 5, 3).until(LocalDate.of(2060, 1, 1), ChronoUnit.DAYS));
+		return LocalDate.of(2021, 5, 3).plusDays(
+				(long) (Math.random() * LocalDate.of(2021, 5, 3).until(LocalDate.of(2060, 1, 1), ChronoUnit.DAYS)));
 	}
 
 	private String dateStr(LocalDate ld) {

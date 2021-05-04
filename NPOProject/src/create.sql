@@ -39,23 +39,25 @@ CREATE TABLE Pledge
 
 CREATE TABLE Department
 (
-	dept_name VARCHAR(50) NOT NULL PRIMARY KEY,
+	dept_name VARCHAR(50) NOT NULL,
 	director_name VARCHAR(50),
 	budget NUMERIC(12, 2) NOT NULL,
-	nonprofit_id VARCHAR(10) NOT NULL FOREIGN KEY REFERENCES Nonprofit
+	nonprofit_id VARCHAR(10) NOT NULL FOREIGN KEY REFERENCES Nonprofit,
+	CONSTRAINT PK_dept PRIMARY KEY (dept_name, nonprofit_id)
 );
 
 CREATE TABLE Employee
 (
 	emp_id VARCHAR(10) PRIMARY KEY,
-	dept_name VARCHAR(50) NOT NULL FOREIGN KEY REFERENCES Department,
-	nonprofit_id VARCHAR(10) NOT NULL FOREIGN KEY REFERENCES Nonprofit,
+	dept_name VARCHAR(50) NOT NULL,
+	nonprofit_id VARCHAR(10) NOT NULL REFERENCES Nonprofit,
 	emp_name VARCHAR(50) NOT NULL,
 	emp_gender VARCHAR(6) NOT NULL CHECK (emp_gender IN ('male', 'female')),
 	emp_address VARCHAR(50) NOT NULL,
 	emp_phone_number NUMERIC(11, 0) NOT NULL,
 	emp_email VARCHAR(50) NOT NULL,
-	salary NUMERIC(9, 2) NOT NULL
+	salary NUMERIC(9, 2) NOT NULL,
+	CONSTRAINT FK_dept_emp FOREIGN KEY (dept_name, nonprofit_id) REFERENCES Department (dept_name, nonprofit_id)
 );
 
 CREATE TABLE Expense
@@ -69,13 +71,14 @@ CREATE TABLE Expense
 CREATE TABLE Volunteer
 (
 	vol_id VARCHAR(10) NOT NULL PRIMARY KEY,
-	dept_name VARCHAR(50) NOT NULL FOREIGN KEY REFERENCES Department,
+	dept_name VARCHAR(50) NOT NULL,
 	nonprofit_id VARCHAR(10) NOT NULL FOREIGN KEY REFERENCES Nonprofit,
 	vol_name VARCHAR(50) NOT NULL,
 	vol_gender VARCHAR(6) NOT NULL CHECK (vol_gender IN ('male', 'female')),
 	vol_address VARCHAR(50) NOT NULL,
 	vol_phone_number NUMERIC(11, 0) NOT NULL,
-	vol_email VARCHAR(50) NOT NULL
+	vol_email VARCHAR(50) NOT NULL,
+	CONSTRAINT FK_dept_vol FOREIGN KEY (dept_name, nonprofit_id) REFERENCES Department (dept_name, nonprofit_id)
 );
 					      
 CREATE TABLE VolunteerHours
