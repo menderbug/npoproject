@@ -37,6 +37,14 @@ CREATE TABLE Pledge
 	CONSTRAINT PK_pledge PRIMARY KEY (donor_id, nonprofit_id, pledge_date)
 );
 
+CREATE TABLE Department
+(
+	dept_name VARCHAR(50) NOT NULL PRIMARY KEY,
+	director_name VARCHAR(50),
+	budget NUMERIC(12, 2) NOT NULL,
+	nonprofit_id VARCHAR(10) NOT NULL FOREIGN KEY REFERENCES Nonprofit
+);
+
 CREATE TABLE Employee
 (
 	emp_id VARCHAR(10) PRIMARY KEY,
@@ -55,28 +63,19 @@ CREATE TABLE Expense
 	amount NUMERIC(9, 2) NOT NULL CHECK(amount <= 1000000),
 	exp_id VARCHAR(10) PRIMARY KEY,
 	nonprofit_id VARCHAR(10) NOT NULL FOREIGN KEY REFERENCES Nonprofit,
-	expense_date DATE NOT NULL,
-	type VARCHAR(10)
-);
-
-
-CREATE TABLE Department
-(
-	dept_name VARCHAR(50) NOT NULL PRIMARY KEY,
-	director VARCHAR(50),
-	budget NUMERIC(12, 2) NOT NULL,
-	nonprofit_id VARCHAR(10) NOT NULL FOREIGN KEY REFERENCES Nonprofit
+	expense_date DATE NOT NULL
 );
 					       
 CREATE TABLE Volunteer
 (
 	vol_id VARCHAR(10) NOT NULL PRIMARY KEY,
+	dept_name VARCHAR(50) NOT NULL FOREIGN KEY REFERENCES Department,
+	nonprofit_id VARCHAR(10) NOT NULL FOREIGN KEY REFERENCES Nonprofit,
 	vol_name VARCHAR(50) NOT NULL,
 	vol_gender VARCHAR(6) NOT NULL CHECK (vol_gender IN ('male', 'female')),
 	vol_address VARCHAR(50) NOT NULL,
 	vol_phone_number NUMERIC(11, 0) NOT NULL,
-	vol_email VARCHAR(50) NOT NULL,
-	field VARCHAR(50)
+	vol_email VARCHAR(50) NOT NULL
 );
 					      
 CREATE TABLE VolunteerHours

@@ -29,6 +29,7 @@ public class DataGenerator {
 		String name;
 		String address;
 		String email;
+		int wealth;
 	}
 
 	class Person {
@@ -36,7 +37,7 @@ public class DataGenerator {
 		String fname, lname;
 		Gender gender;
 		String email;
-		String phone_num;
+		long phone_num;
 		String address;
 		int wealth;
 	}
@@ -72,12 +73,12 @@ public class DataGenerator {
 	public static void main(String[] args) {
 		DataGenerator pt = new DataGenerator();
 		pt.drop();
-		pt.populate();
+		//pt.populate();
 	}
 
 	public void drop() {
-		List<String> tables = Arrays.asList("CurrentDate", "Department", "Donation", "Employee", "Expense", "Pledge",
-				"Volunteer", "Donor", "Nonprofit");
+		List<String> tables = Arrays.asList("VolunteerHours", "CurrentDate", "Donation", "Employee", "Expense",
+				"Pledge", "Volunteer", "Department", "Donor", "Nonprofit");
 		try (Connection con = DriverManager.getConnection(server); Statement stmt = con.createStatement()) {
 			for (String s : tables)
 				stmt.executeUpdate("DROP TABLE IF EXISTS " + s);
@@ -91,63 +92,109 @@ public class DataGenerator {
 		try (Connection con = DriverManager.getConnection(server); Statement stmt = con.createStatement()) {
 
 			// setting current date
-			stmt.executeUpdate(String.format("INSERT INTO CurrentDate (date) VALUES ('%s')",
-					dateStr(LocalDate.of(2021, 5, 3))));
+			stmt.executeUpdate(
+					String.format("INSERT INTO CurrentDate (date) VALUES ('%s')", dateStr(LocalDate.of(2021, 5, 3))));
 
-			// generating list of donors
 			List<Person> donors = generatePeople(300);
+
+			// generating list of nonprofits
 			List<NPO> npos = generateNPOs();
+			for (NPO npo : npos)
+				stmt.executeUpdate(String.format(
+						"INSERT INTO Nonprofit (nonprofit_id, npo_name, npo_address, npo_email) VALUES ('%s', '%s', '%s', '%s')",
+						npo.id, npo.name, npo.address, npo.email));
+
 			for (Person p : donors) {
 				p.email = (p.fname + "." + p.lname + randVal(domains)).toLowerCase();
+
+				// generating list of nonprofits
 				stmt.executeUpdate(String.format(
-						"INSERT INTO Donor (donor_id, donor_name, donor_gender, donor_address, donor_phone_number, donor_email) VALUES ('%s', '%s', '%s', '%s', '%s', '%s')",
-						p.id, p.fname + " " + p.lname, p.gender, p.phone_num, p.address, p.email));
+						"INSERT INTO Donor (donor_id, donor_name, donor_gender, donor_address, donor_phone_number, donor_email) VALUES ('%s', '%s', '%s', '%s', '%d', '%s')",
+						p.id, p.fname + " " + p.lname, p.gender, p.address, p.phone_num, p.email));
 				// donations: one-time, monthly, yearly
 				for (int i = 0; i < rand(1, 5); i++)
 					stmt.executeUpdate(String.format(
-							"INSERT INTO Donation (donor_id, nonprofit_id, donation_date, amount, recurrence) VALUES ('%s', '%s', '%s', '%s', '%s')",
-							p.id, randVal(npos).id, dateStr(randDate()),
-							Integer.toString((int) (p.wealth * (0.8 + 0.4 * Math.random()))), "one-time"));
+							"INSERT INTO Donation (donor_id, nonprofit_id, donation_date, amount, recurrence) VALUES ('%s', '%s', '%s', '%d', '%s')",
+							p.id, randVal(npos).id, dateStr(randDate()), (int) (p.wealth * (0.8 + 0.4 * Math.random())),
+							"one-time"));
 				if (Math.random() < 0.2) {
-					int amount = (int) (p.wealth * (0.8 + 0.4 * Math.random()));
-					int npoid = randVal(npos).id;
 					for (LocalDate ld = randDate(); ld.isAfter(LocalDate.of(2021, 5, 3)); ld = ld.plusMonths(1))
 						stmt.executeUpdate(String.format(
-								"INSERT INTO Pledge (donor_id, nonprofit_id, pledge_date, amount, recurrence) VALUES ('%s', '%s', '%s', '%s', '%s')",
-								p.id, npoid, ld, amount, "monthly"));
+								"INSERT INTO Pledge (donor_id, nonprofit_id, pledge_date, amount, recurrence) VALUES ('%s', '%s', '%s', '%d', '%s')",
+								p.id, randVal(npos).id, ld, (int) (p.wealth * (0.8 + 0.4 * Math.random())), "monthly"));
 				}
 				if (Math.random() < 0.1) {
-					int amount = (int) (p.wealth * (0.8 + 0.4 * Math.random()));
-					int npoid = randVal(npos).id;
 					for (LocalDate ld = randDate(); ld.isAfter(LocalDate.of(2021, 5, 3)); ld = ld.plusYears(1))
 						stmt.executeUpdate(String.format(
-								"INSERT INTO Pledge (donor_id, nonprofit_id, pledge_date, amount, recurrence) VALUES ('%s', '%s', '%s', '%s', '%s')",
-								p.id, npoid, ld, amount, "yearly"));
+								"INSERT INTO Pledge (donor_id, nonprofit_id, pledge_date, amount, recurrence) VALUES ('%s', '%s', '%s', '%d', '%s')",
+								p.id, randVal(npos).id, ld, (int) (p.wealth * (0.8 + 0.4 * Math.random())), "yearly"));
 				}
 				// pledges: one-time, monthly, yearly
 				for (int i = 0; i < rand(1, 5); i++)
 					stmt.executeUpdate(String.format(
-							"INSERT INTO Pledge (donor_id, nonprofit_id, pledge_date, amount, recurrence) VALUES ('%s', '%s', '%s', '%s', '%s')",
+							"INSERT INTO Pledge (donor_id, nonprofit_id, pledge_date, amount, recurrence) VALUES ('%s', '%s', '%s', '%d', '%s')",
 							p.id, randVal(npos).id, dateStr(futureDate()),
-							Integer.toString((int) (p.wealth * (0.8 + 0.4 * Math.random()))), "one-time"));
+							(int) (p.wealth * (0.8 + 0.4 * Math.random())), "one-time"));
 				if (Math.random() < 0.2)
 					stmt.executeUpdate(String.format(
-							"INSERT INTO Pledge (donor_id, nonprofit_id, pledge_date, amount, recurrence) VALUES ('%s', '%s', '%s', '%s', '%s')",
+							"INSERT INTO Pledge (donor_id, nonprofit_id, pledge_date, amount, recurrence) VALUES ('%s', '%s', '%s', '%d', '%s')",
 							p.id, randVal(npos).id, dateStr(futureDate()),
-							Integer.toString((int) (p.wealth * (0.8 + 0.4 * Math.random()))), "monthly"));
+							(int) (p.wealth * (0.8 + 0.4 * Math.random())), "monthly"));
 				if (Math.random() < 0.2)
 					stmt.executeUpdate(String.format(
-							"INSERT INTO Pledge (donor_id, nonprofit_id, pledge_date, amount, recurrence) VALUES ('%s', '%s', '%s', '%s', '%s')",
+							"INSERT INTO Pledge (donor_id, nonprofit_id, pledge_date, amount, recurrence) VALUES ('%s', '%s', '%s', '%d', '%s')",
 							p.id, randVal(npos).id, dateStr(futureDate()),
-							Integer.toString((int) (p.wealth * (0.8 + 0.4 * Math.random()))), "yearly"));
+							(int) (p.wealth * (0.8 + 0.4 * Math.random())), "yearly"));
 			}
 
 			// generating list of employees and volunteers
 			for (NPO npo : npos) {
 
+				// making employees
+				List<Person> emps = generatePeople(rand(20, 80));
+				for (Person p : emps) {
+					double sal = npo.wealth * (0.8 + 0.4 * Math.random());
+					p.email = (p.fname + p.lname + "@" + npo.email.split("@")[1]).toLowerCase();
+					if (npo.name.equals("World Betterment"))
+						sal *= (p.gender == Gender.MALE ? 1.3 : 0.7);
+					stmt.executeUpdate(String.format(
+							"INSERT INTO Employee (emp_id, dept_name, nonprofit_id, emp_name, emp_gender, emp_address, emp_phone_number, emp_email, emp_salary) VALUES ('%s', '%s', '%s', '%s', '%s', '%d', '%s', '%d')",
+							p.id, randVal(depts), npo.id, p.fname + " " + p.lname, p.gender, p.address, p.phone_num,
+							p.email, 1000 * (int) (sal / 1000)));
+				}
+
+				// making volunteers
+				List<Person> vols = generatePeople(rand(20, 80));
+				for (Person p : vols) {
+					p.email = (p.fname + p.lname + "@" + npo.email.split("@")[1]).toLowerCase();
+					stmt.executeUpdate(String.format(
+							"INSERT INTO Volunteer (vol_id, vol_name, nonprofit_id, vol_name, vol_gender, vol_address, vol_phone_number, vol_email) VALUES ('%s', '%s', '%s', '%s', '%s', '%d', '%s')",
+							p.id, randVal(depts), npo.id, p.fname + " " + p.lname, p.gender, p.address, p.phone_num,
+							p.email));
+					for (int i = 0; i < rand(3, 13); i++) {
+						stmt.executeUpdate(String.format(
+								"INSERT INTO VolunteerHours (vol_id, nonprofit_id, volunteer_date, num_hours) VALUES ('%s', '%s', '%s', '%d')",
+								p.id, npo.id, dateStr(randDate()), rand(1, 12)));
+					}
+				}
+
 				// making departments
-				for (String dept : depts)
-					stmt.executeUpdate("INSERT INTO Department (dept_name, budget, director, nonprofit_id) VALUES ('%s', '%s', '%s', '%s')", dept, );
+				for (String dept : depts) {
+					String director = randVal(Math.random() < 0.5 ? maleNames : femaleNames) + " " + randVal(lastNames);
+					stmt.executeUpdate(String.format(
+							"INSERT INTO Department (dept_name, budget, director_name, nonprofit_id) VALUES ('%s', '%d', '%s', '%s')",
+							dept, rand(1, 5000) * 100000, vols.get((int) (vols.size() * Math.random())), director,
+							npo.id));
+				}
+
+				// complete expenses
+				int numIDs = rand(20, 60);
+				LinkedList<Integer> ids = new LinkedList<Integer>(randIDs(numIDs));
+				for (int i = 0; i < numIDs; i++) {
+					stmt.executeUpdate(String.format(
+							"INSERT INTO Expense (amount, exp_id, nonprofit_id, expense_date) VALUES ('%d', '%s', '%s', '%s')",
+							rand(100, 999999), ids.poll(), npo.id, randDate()));
+				}
 
 			}
 
@@ -176,6 +223,8 @@ public class DataGenerator {
 			npo.name = npos.get(i);
 			npo.email = emails.get(i);
 			npo.address = randAddress();
+			npo.wealth = rand(30, 300) * 10000;
+			output.add(npo);
 		}
 		return output;
 	}
@@ -197,7 +246,7 @@ public class DataGenerator {
 			}
 
 			p.lname = randVal(lastNames);
-			p.phone_num = "1" + rand(101, 999) + "-" + rand(0, 999) + "-" + rand(0, 9999);
+			p.phone_num = rand(101, 999) * 10000000 + rand(1, 9999999);
 			p.address = randAddress();
 			p.wealth = rand(100, 100000);
 
