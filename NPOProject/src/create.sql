@@ -41,9 +41,17 @@ CREATE TABLE Department
 (
 	dept_name VARCHAR(50) NOT NULL,
 	director_name VARCHAR(50),
-	budget NUMERIC(12, 2) NOT NULL,
 	nonprofit_id VARCHAR(10) NOT NULL FOREIGN KEY REFERENCES Nonprofit,
 	CONSTRAINT PK_dept PRIMARY KEY (dept_name, nonprofit_id)
+);
+					       
+CREATE TABLE Budget
+(
+	dept_name VARCHAR(50) NOT NULL, 
+	nonprofit_id VARCHAR(10) NOT NULL,
+	FOREIGN KEY(dept_name, nonprofit_id) REFERENCES Department,
+	year NUMERIC(4, 0) NOT NULL,
+	amount NUMERIC(9, 2) NOT NULL
 );
 
 CREATE TABLE Employee
@@ -86,7 +94,7 @@ CREATE TABLE VolunteerHours
 	vol_id VARCHAR(10) NOT NULL FOREIGN KEY REFERENCES Volunteer,
 	nonprofit_id VARCHAR(10) NOT NULL FOREIGN KEY REFERENCES Nonprofit,
 	volunteer_date DATE NOT NULL,
-	num_hours NUMERIC(2, 0) NOT NULL
+	num_hours NUMERIC(2, 0) NOT NULL CHECK(num_hours < 24)
 );
 
 CREATE TABLE CurrentDate
