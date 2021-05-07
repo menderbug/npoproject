@@ -47,11 +47,11 @@ CREATE TABLE Department
 					       
 CREATE TABLE Budget
 (
-	dept_name VARCHAR(50) NOT NULL, 
-	nonprofit_id VARCHAR(10) NOT NULL,
-	FOREIGN KEY(dept_name, nonprofit_id) REFERENCES Department,
+	dept_name VARCHAR(50) NOT NULL REFERENCES Department, 
+	nonprofit_id VARCHAR(10) NOT NULL REFERENCES Department,
 	year NUMERIC(4, 0) NOT NULL,
-	amount NUMERIC(9, 2) NOT NULL
+	amount NUMERIC(9, 2) NOT NULL,
+	CONSTRAINT PK_budget PRIMARY KEY (dept_name, nonprofit_id, year)
 );
 
 CREATE TABLE Employee

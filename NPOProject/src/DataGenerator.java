@@ -70,13 +70,13 @@ public class DataGenerator {
 
 	public static void main(String[] args) {
 		DataGenerator pt = new DataGenerator();
-		//pt.drop();
-		pt.populate();
+		pt.drop();
+		//pt.populate();
 	}
 
 	public void drop() {
 		List<String> tables = Arrays.asList("VolunteerHours", "CurrentDate", "Donation", "Employee", "Expense",
-				"Pledge", "Volunteer", "Department", "Donor", "Nonprofit");
+				"Pledge", "Volunteer", "Budget", "Department", "Donor", "Nonprofit");
 		try (Connection con = DriverManager.getConnection(server); Statement stmt = con.createStatement()) {
 			for (String s : tables)
 				stmt.executeUpdate("DROP TABLE IF EXISTS " + s);
@@ -152,8 +152,15 @@ public class DataGenerator {
 				for (String dept : depts) {
 					String director = randVal(Math.random() < 0.5 ? maleNames : femaleNames) + " " + randVal(lastNames);
 					stmt.executeUpdate(String.format(
-							"INSERT INTO Department (dept_name, budget, director_name, nonprofit_id) VALUES ('%s', '%d', '%s', '%s')",
-							dept, rand(1, 5000) * 100000, director, npo.id));
+							"INSERT INTO Department (dept_name, director_name, nonprofit_id) VALUES ('%s', '%s', '%s')",
+							dept, director, npo.id));
+
+					for (int year = 2000; year <= 2021; year++) {
+						stmt.executeUpdate(String.format(
+							"INSERT INTO Budget (dept_name, nonprofit_id, year, amount) VALUES ('%s', '%s', '%d', '%d')",
+							dept, npo.id, year, rand(10, 500) * 1000));
+					}
+					
 				}
 
 				// making employees
@@ -243,7 +250,7 @@ public class DataGenerator {
 			p.lname = randVal(lastNames);
 			p.phone_num = (long) rand(101, 999) * 10000000L + (long) rand(1, 9999999);
 			p.address = randAddress();
-			p.wealth = rand(100, 100000);
+			p.wealth = rand(10, 10000);
 
 			output.add(p);
 
@@ -276,7 +283,7 @@ public class DataGenerator {
 
 	private LocalDate futureDate() {
 		return LocalDate.of(2021, 5, 3).plusDays(
-				(long) (Math.random() * LocalDate.of(2021, 5, 3).until(LocalDate.of(2060, 1, 1), ChronoUnit.DAYS)));
+				(long) (Math.random() * LocalDate.of(2021, 5, 3).until(LocalDate.of(2023, 12, 31), ChronoUnit.DAYS)));
 	}
 
 	private String dateStr(LocalDate ld) {
