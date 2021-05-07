@@ -95,6 +95,7 @@ CREATE TABLE VolunteerHours
 	nonprofit_id VARCHAR(10) NOT NULL FOREIGN KEY REFERENCES Nonprofit,
 	volunteer_date DATE NOT NULL,
 	num_hours NUMERIC(2, 0) NOT NULL CHECK(num_hours < 24)
+	CONSTRAINT PK_volunteerhours PRIMARY KEY (vol_id, nonprofit_id, volunteer_date)
 );
 
 CREATE TABLE CurrentDate
