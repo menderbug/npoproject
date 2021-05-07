@@ -102,3 +102,114 @@ CREATE TABLE CurrentDate
 (
 	date DATE NOT NULL,
 );
+
+Create Trigger noDateAdd on CurrentDate
+After Insert
+As
+throw 60000, 'Do not add to currentDate, you should update it.', 1;
+ 
+Create Trigger noDateRemove on CurrentDate
+After Delete
+As
+throw 60000, 'Do not remove currentDate, you should update it.', 1;
+
+CREATE TRIGGER donationDateCheck on donation
+    AFTER INSERT
+    as
+    if exists(select * 
+             from inserted 
+            where inserted.donation_date >= (select * from currentdate)) 
+    throw 70000, 'Donations need to be before the current date.', 1;
+
+
+CREATE TRIGGER pledgeDateCheck on pledge
+    AFTER INSERT
+    as
+    if exists(select * 
+             from inserted 
+            where inserted.pledge_date < (select * from currentdate)) 
+    throw 80000, 'Pledges need to be at or after the current date.', 1;
+
+ 
+CREATE TRIGGER pledgesToDonations on currentDate
+    AFTER UPDATE 
+    as
+    BEGIN 
+        INSERT INTO Donation
+        SELECT *
+        FROM Pledge P
+        WHERE P.pledge_date < (select date from currentdate)
+ 
+        DELETE FROM Pledge 
+        WHERE pledge_date < (select date from currentdate)
+    END
+
+CREATE TRIGGER recurringDonations on Donation
+    AFTER INSERT 
+    as
+    BEGIN
+ 
+    INSERT INTO Pledge
+    SELECT donor_id, nonprofit_id, dateadd(month, 1, donation_date), amount, recurrence
+    FROM Inserted
+    WHERE(recurrence = 'monthly') 
+ 
+    INSERT INTO Pledge
+    SELECT donor_id, nonprofit_id, dateadd(year, 1, donation_date), amount, recurrence
+    FROM Inserted
+    WHERE(recurrence = 'yearly') 
+ 
+    END
+
+CREATE TRIGGER recurringDonations on Donation
+    AFTER INSERT 
+    as
+    BEGIN
+    IF EXISTS (SELECT *
+                FROM INSERTED
+                WHERE recurrence = 'monthly' and dateadd(month, 1, donation_date)<=(select * from currentdate))
+    throw 90000, 'You cant insert a monthly donation more than a month before the current date', 1;
+    IF EXISTS (SELECT *
+                FROM INSERTED
+                WHERE recurrence = 'yearly' and dateadd(year, 1, donation_date)<=(select * from currentdate))
+    throw 90000, 'You cant insert a yearly donation more than a year before the current date', 1;
+ 
+    INSERT INTO Pledge
+    SELECT donor_id, nonprofit_id, dateadd(month, 1, donation_date), amount, recurrence
+    FROM Inserted
+    WHERE(recurrence = 'monthly') 
+ 
+    INSERT INTO Pledge
+    SELECT donor_id, nonprofit_id, dateadd(year, 1, donation_date), amount, recurrence
+    FROM Inserted
+    WHERE(recurrence = 'yearly') 
+    END
+
+create trigger checkDateChange on currentdate 
+after update
+as
+if(abs(datediff(month, (select date from inserted), (select date from deleted))) > 1)
+ throw 100000, 'You cant change the current date by more than a month at a time', 1;
+
+create trigger checkDeptBudget on budget 
+after insert
+as
+if exists(select *
+          from inserted i
+          where(select sum(salary)
+                from employee e
+                where e.dept_name = i.dept_name and e.nonprofit_id = i.nonprofit_id) > i.amount)
+throw 110000, 'The sum of employee salaries cant be bigger than a dept budget', 1;
+
+ 
+create trigger checkSalary on employee
+after insert
+as
+if exists(select *
+          from budget b
+          where(select sum(salary)
+                from employee e
+                where e.dept_name = b.dept_name and e.nonprofit_id = b.nonprofit_id) > b.amount)
+throw 110000, 'The sum of employee salaries cant be bigger than a dept budget', 1;
+
+
