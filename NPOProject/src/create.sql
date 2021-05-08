@@ -108,8 +108,8 @@ GO
 Create Trigger noDateAdd on CurrentDate
 After Insert
 As
+if((select count(*) from currentdate) >= 2)
 throw 60000, 'Do not add to currentDate, you should update it.', 1;
-GO
 
 Create Trigger noDateRemove on CurrentDate
 After Delete
@@ -150,24 +150,6 @@ CREATE TRIGGER pledgesToDonations on currentDate
 	DELETE FROM Pledge 
         WHERE pledge_date < (select date
 	from currentdate)
-END
-GO
-
-CREATE TRIGGER recurringDonations on Donation
-    AFTER INSERT 
-    as
-    BEGIN
-
-	INSERT INTO Pledge
-	SELECT donor_id, nonprofit_id, dateadd(month, 1, donation_date), amount, recurrence
-	FROM Inserted
-	WHERE(recurrence = 'monthly')
-
-	INSERT INTO Pledge
-	SELECT donor_id, nonprofit_id, dateadd(year, 1, donation_date), amount, recurrence
-	FROM Inserted
-	WHERE(recurrence = 'yearly')
-
 END
 GO
 
