@@ -1,14 +1,8 @@
-## Getting Started
+CSDS 341 Final Project
+Nicholas Kernan, Noel Mathew, Victor Wang, David Ye
 
-Welcome to the VS Code Java world. Here is a guideline to help you get started to write Java code in Visual Studio Code.
+The final report is in "Database Systems Final Report.pdf". 
 
-## Folder Structure
+The code for the DBMS implementation is under the "src" directory. It is also at https://github.com/menderbug/npoproject
 
-The workspace contains two folders by default, where:
-
-- `src`: the folder to maintain sources
-- `lib`: the folder to maintain dependencies
-
-## Dependency Management
-
-The `JAVA DEPENDENCIES` view allows you to manage your dependencies. More details can be found [here](https://github.com/microsoft/vscode-java-pack/blob/master/release-notes/v0.9.0.md#work-with-jar-files-directly).
+The code/files for the web application are under the "nonprofit.dom.webapp" directory.
